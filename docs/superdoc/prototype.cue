@@ -259,16 +259,11 @@ screens: {
 
 #Action: "press" | "hold" | "release" | "turn_left" | "turn_right"
 
-// An action sequence is a list of actions, for instance:
-// [[hold controls.pad_1_1] [press controls.pad_3_2] [release controls.pad_1_1]]
-#ActionSequence: [...[#Action, #Control]]
-
-// Effects are either prose or a transition. Transitions reference screens and
+// Effects are either prose or a transition. Transitions reference screen states and
 // control states by ID, so a screen can merge the static controls without
-// creating a structural cycle.
-#ScreenRef: {screen!: #ID}
-#ControlStateRef: {state!: #ID}
-#Effect: #Text | #ScreenRef | #ControlStateRef
+// creating a structural cycle. The valid ID sets are derived below from the
+// keys of the concrete screen_states and control_states maps.
+#Effect: #Text | #ScreenStateID | #ControlStateID
 
 #Light: "on" | "off" | "dim" | "bright" | "blink" | "flash"
 #LightState: [#Light, #Color] | [#Light]
@@ -294,61 +289,77 @@ screens: {
 // The hardware starts from a blank project.
 
 // static controls always have the same effect, whatever the screen state they are in
+
+static_controls: [key=#ID]: #ControlState
 static_controls: {
-	controls: [key=#ID]: #ControlState
-	controls: {
-		synth_1: {light: ["on", colors.violet], usage: {press: [{screen: "synth1_note_screen"}]}}
-		master_volume: {usage: {
-			turn_left: [{en: "Lower the master volume"}]
-			turn_right: [{en: "Raise the master volume"}]
-		}}
-		shift: {light: ["on", colors.green], usage: {press: [{en: "Toggle sticky shift"}]}}
+	synth_1: {light: ["on", colors.violet], usage: {press: ["synth1_note_screen"]}}
+	master_volume: {usage: {
+		turn_left: [{en: "Lower the master volume"}]
+		turn_right: [{en: "Raise the master volume"}]
+	}}
+	// fixme shift is contextual to a screen
+	// shift: {light: ["on", colors.green], usage: {press: [{en: "Toggle sticky shift"}]}}
+}
+
+control_states: [key=#ID]: #ControlState
+control_states: {
+	// -- Drum 1 note view (User Guide v3, p. 60-61)
+
+	drum_step_pad_state_inactive: {
+		light: ["on", colors.dim_blue]
+		usage: {
+			press: [
+				{en: "Assign the active sample to the pattern step"},
+				"drum_step_pad_state_active",
+			]
+		}
+	}
+	drum_step_pad_state_active: {
+		light: ["on", colors.bright_blue]
+		usage: {
+			press: [
+				{en: "Unassign the active sample from the pattern step"},
+				"drum_step_pad_state_inactive",
+			]
+		}
 	}
 }
 
-// -- Drum 1 note view (User Guide v3, p. 60-61)
+// Only the keys of control_states are valid transition targets.
+#ControlStateID: or([for k, _ in control_states {k}])
 
-drum_step_pad_state_inactive: #ControlState & {
-	light: ["on", colors.dim_blue]
-	usage: {
-		press: [
-			{en: "Assign the active sample to the pattern step"},
-			{state: "drum_step_pad_state_active"},
-		]
+screen_states: [key=#ID]: #ScreenState
+screen_states: {
+	// -- Drum 1 note view (User Guide v3, p. 60-61)
+
+	drum1_note_screen_state: {
+		description: {en: "The first programmable drum track"}
+		controls: {
+			pad_1_1: control_states.drum_step_pad_state_inactive
+			drum_1: {light: ["on", colors.orange], usage: {}}
+			preset: {light: ["on", colors.dim_white], usage: {press: ["drum1_sample_selection"]}}
+		} & static_controls
+	}
+
+	// -- Drum 1 sample selection (User Guide v3, p. 62)
+
+	drum1_sample_selection: {
+		description: {en: "Four rows of samples to select for the current drum track"}
+		controls: {
+			drum_1: {light: ["on", colors.orange], usage: {press: ["drum1_note_screen_state"]}}
+			preset: {light: ["on", colors.orange], usage: {
+				//TODO
+			}}
+		} & static_controls
+	}
+
+	// -- Synth 1 note view (User Guide v3, p. 27)
+
+	synth1_note_screen: {
+		description: {en: "The first programmable synth track"}
+		controls: {} & static_controls
 	}
 }
 
-drum_step_pad_state_active: #ControlState & {
-	light: ["on", colors.bright_blue]
-	usage: {
-		press: [
-			{en: "Unassign the active sample from the pattern step"},
-			{state: "drum_step_pad_state_inactive"},
-		]
-	}
-}
-
-drum1_note_screen_state: #ScreenState & {
-	description: {en: "The first programmable drum track"}
-	controls: {
-		pad_1_1: drum_step_pad_state_inactive
-		drum_1: {light: ["on", colors.orange], usage: {}}
-		preset: {light: ["on", colors.dim_white], usage: {press: [{screen: "drum1_sample_selection"}]}}
-	} & static_controls.controls
-}
-
-// -- Drum 1 sample selection (User Guide v3, p. 62)
-
-drum1_sample_selection: #ScreenState & {
-	description: {en: "Four rows of samples to select for the current drum track"}
-	controls: {
-		drum_1: {light: ["on", colors.orange], usage: {press: [{screen: "drum1_note_screen_state"}]}}
-	} & static_controls.controls
-}
-
-// -- Synth 1 note view (User Guide v3, p. 27)
-
-synth1_note_screen: #ScreenState & {
-	description: {en: "The first programmable synth track"}
-	controls: {} & static_controls.controls
-}
+// Only the keys of screen_states are valid transition targets.
+#ScreenStateID: or([for k, _ in screen_states {k}])
