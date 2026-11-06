@@ -1,3 +1,5 @@
+ALWAYS read schema.cue
+
 ## Validation 
 
 `cue vet file.cue` to check a CUE file
@@ -7,6 +9,8 @@
 
 - Read the docs in this repository
 - Read the official docs in sibling project ~/projects/circuit-tracks-docs
+
+Warn: The circuit-hack overrides some stock behavior. Like the shift key.
 
 When you implement or change a screen, you can stub any other screen_state, leave a TODO note with all infos you have. But the control_state must not be stubbed.
 
