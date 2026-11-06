@@ -2,6 +2,8 @@ package ui
 
 control_states: [key=#ID]: #ControlState
 control_states: {
+	
+	// ── Drum 1 Note view: pattern step pads (pads 1-16) ──────────────────
 
 	drum_step_pad_state_no_hit: {
 		description: {en: "Pattern step with no drum hit"}
@@ -16,7 +18,7 @@ control_states: {
 		}
 		duplicate_function: {
 			press: {en: "Copy this step's data; then press another step to paste it"}
-		}
+		} 
 		record_function: {
 			press: {en: "With Record held, write a snapshot of pitch, decay, distortion and EQ into this step (Beta 5.16); the step lights yellow while it is held and still has no hit"}
 		}
@@ -79,9 +81,15 @@ control_states: {
 		}
 	}
 
+	// FIXME missing fromGesture
 	drum_step_pad_state_held_assigned: {
 		description: {en: "Pattern step held with a sample assigned (triggered by pressing a sample pad during the hold)"}
 		light: ["on", colors.red]
+		fromGesture: {
+			drum_step_pad_state_no_hit:  "hold"
+			drum_step_pad_state_active:  "hold"
+			drum_step_pad_state_flipped: "hold"
+		}
 		function: {
 			hold: {en: "A sample is now assigned to the held step; keep holding to pick another, or let go to commit the flip"}
 			release: {en: "Let go: the step becomes pink with the assigned (flipped) sample"}
