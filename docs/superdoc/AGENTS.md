@@ -12,7 +12,9 @@ When you implement or change a screen, you can stub any other screen_state, leav
 
 Reuse wording from the docs
 
-## Comments convention
+## Convention
+
+### Comments
 
 A human comments starts with `// H: blabla` and can be multiline
 An agent comment starts with `// G: blipblip ` and can be multine
@@ -27,6 +29,11 @@ example
 line 1 and 2 is human, line 3 and 4 are agent
 
 an Agent must NEVER rewrite a human comment without consent and explicit confirmation
+
+### Schema
+
+When assigned a task, you must NEVER change the schema unless explicitely told. You
+can propose changes, but no change  without consent and explicit confirmation
 
 ## Future
 
